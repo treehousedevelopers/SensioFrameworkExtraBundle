@@ -112,21 +112,5 @@ class SensioFrameworkExtraExtension extends Extension
         }
     }
 
-    /**
-     * Returns the base path for the XSD files.
-     *
-     * @return string The XSD base path
-     */
-    public function getXsdValidationBasePath()
-    {
-        return __DIR__.'/../Resources/config/schema';
-    }
 
-    /**
-     * @return string
-     */
-    public function getNamespace()
-    {
-        return 'http://symfony.com/schema/dic/symfony_extra';
-    }
 }
