@@ -92,6 +92,11 @@ class SensioFrameworkExtraExtension extends Extension
             // must be first
             $loader->load('annotations.xml');
 
+            // Add service alias for annotation reader
+            if (!$container->hasDefinition('annotation_reader') && $container->hasDefinition('doctrine_annotations.reader')) {
+                $container->setAlias('annotation_reader', 'doctrine_annotations.reader');
+            }
+
             foreach ($annotationsToLoad as $configFile) {
                 $loader->load($configFile);
             }
