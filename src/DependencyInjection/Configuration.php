@@ -13,7 +13,6 @@ namespace Sensio\Bundle\FrameworkExtraBundle\DependencyInjection;
 
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
-use Symfony\Component\Config\Definition\NodeInterface;
 
 /**
  * FrameworkExtraBundle configuration structure.
@@ -25,9 +24,9 @@ class Configuration implements ConfigurationInterface
     /**
      * Generates the configuration tree.
      *
-     * @return NodeInterface
+     * @return TreeBuilder
      */
-    public function getConfigTreeBuilder()
+    public function getConfigTreeBuilder(): TreeBuilder
     {
         $treeBuilder = new TreeBuilder('sensio_framework_extra');
 
