@@ -92,6 +92,9 @@ class SensioFrameworkExtraExtension extends Extension
             // must be first
             $loader->load('annotations.xml');
 
+            // Handle annotation reader service for Symfony 7 compatibility
+            $this->handleAnnotationReaderService($container);
+
             foreach ($annotationsToLoad as $configFile) {
                 $loader->load($configFile);
             }
@@ -113,20 +116,31 @@ class SensioFrameworkExtraExtension extends Extension
     }
 
     /**
-     * Returns the base path for the XSD files.
-     *
-     * @return string The XSD base path
+     * Handle annotation reader service for Symfony 7 compatibility.
      */
-    public function getXsdValidationBasePath()
+    private function handleAnnotationReaderService(ContainerBuilder $container): void
     {
-        return __DIR__.'/../Resources/config/schema';
-    }
+        if ($container->hasDefinition('annotation_reader')) {
+            return;
+        }
 
-    /**
-     * @return string
-     */
-    public function getNamespace()
-    {
-        return 'http://symfony.com/schema/dic/symfony_extra';
+        // Try to find the annotation reader service with different possible names
+        $possibleServices = ['doctrine_annotations.reader', 'annotation_reader', 'doctrine_annotations.cached_reader'];
+        $foundService = null;
+        
+        foreach ($possibleServices as $serviceName) {
+            if ($container->hasDefinition($serviceName)) {
+                $foundService = $serviceName;
+                break;
+            }
+        }
+        
+        if ($foundService) {
+            $container->setAlias('annotation_reader', $foundService);
+        } else {
+            // If no annotation reader service is found, we might be in a Symfony 7 setup without annotations
+            // In this case, we can still work with attributes only
+            $container->removeDefinition('sensio_framework_extra.controller.listener');
+        }
     }
 }

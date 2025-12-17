@@ -57,24 +57,16 @@ class ControllerListener implements EventSubscriberInterface
         $object = new \ReflectionClass($className);
         $method = $object->getMethod($controller[1]);
 
+        // Get annotations
         $classConfigurations = $this->getConfigurations($this->reader->getClassAnnotations($object));
         $methodConfigurations = $this->getConfigurations($this->reader->getMethodAnnotations($method));
 
+        // Get attributes (PHP 8.0+)
         if (80000 <= \PHP_VERSION_ID) {
-            $classAttributes = array_map(
-                function (\ReflectionAttribute $attribute) {
-                    return $attribute->newInstance();
-                },
-                $object->getAttributes(ConfigurationInterface::class, \ReflectionAttribute::IS_INSTANCEOF)
-            );
+            $classAttributes = $this->getAttributeInstances($object->getAttributes(ConfigurationInterface::class, \ReflectionAttribute::IS_INSTANCEOF));
             $classConfigurations = array_merge($classConfigurations, $this->getConfigurations($classAttributes));
 
-            $methodAttributes = array_map(
-                function (\ReflectionAttribute $attribute) {
-                    return $attribute->newInstance();
-                },
-                $method->getAttributes(ConfigurationInterface::class, \ReflectionAttribute::IS_INSTANCEOF)
-            );
+            $methodAttributes = $this->getAttributeInstances($method->getAttributes(ConfigurationInterface::class, \ReflectionAttribute::IS_INSTANCEOF));
             $methodConfigurations = array_merge($methodConfigurations, $this->getConfigurations($methodAttributes));
         }
 
@@ -113,12 +105,28 @@ class ControllerListener implements EventSubscriberInterface
                 } elseif (!isset($configurations['_'.$configuration->getAliasName()])) {
                     $configurations['_'.$configuration->getAliasName()] = $configuration;
                 } else {
-                    throw new \LogicException(sprintf('Multiple "%s" annotations are not allowed.', $configuration->getAliasName()));
+                    throw new \LogicException(sprintf('Multiple "%s" annotations/attributes are not allowed.', $configuration->getAliasName()));
                 }
             }
         }
 
         return $configurations;
+    }
+
+    /**
+     * Get attribute instances from reflection attributes.
+     *
+     * @param \ReflectionAttribute[] $attributes
+     * @return array
+     */
+    private function getAttributeInstances(array $attributes): array
+    {
+        return array_map(
+            function (\ReflectionAttribute $attribute) {
+                return $attribute->newInstance();
+            },
+            $attributes
+        );
     }
 
     /**
